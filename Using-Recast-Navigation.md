@@ -133,6 +133,58 @@ If the construction was invalid, or if you change the path's properties and need
 ## Following a path
 
 Once you have a `NavPath`, you'll need to get your `AIPlayer` to walk along it.
+We do this by keeping track of the `AIPlayer`'s current node index, so when it reaches its movement destination,
+it knows which node to walk to next.
+Let's write that piece first.
+We'll assume we are keeping track of `.path` and `.node` properties on each `AIPlayer` - later on, we'll write the code that sets these!
+
+    function AIPlayer::onReachDestination(%this)
+    {
+       if(%this.path)
+       {
+          if(%this.node < %this.path.getCount() - 1)
+          {
+             %this.node++;
+             %this.goToPathNode();
+          }
+          else
+          {
+             %this.path.delete();
+             %this.path = "";
+             %this.node = "";
+          }
+       }
+    }
+
+So, if we reach a destination while on a path, and while we're not at the end of the path,
+we will increment our target node and go there.
+Otherwise we'll do some cleanup and forget our path.
+Let's see how that `goToPathNode` method works:
+
+    function AIPlayer::goToPathNode(%this)
+    {
+       if(%this.path)
+       {
+          %this.setMoveDestination(%this.path.getNode(%this.node));
+       }
+    }
+
+Simple - set the movement destination to the location of the current node!
+Now, let's have one more method to start the whole process:
+
+    function AIPlayer::followNavPath(%this, %path)
+    {
+       if(%this.path)
+       {
+          %this.path.delete();
+       }
+       %this.path = %path;
+       %this.node = 0;
+       %this.goToPathNode();
+    }
+
+So now you can create a `NavPath` and call `%player.followNavPath(%path)` to have the character walk along the path.
+The path will be deleted when the character gets to the end.
 
 ## Differences between Path and NavPath
 
